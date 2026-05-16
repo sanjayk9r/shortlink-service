@@ -1,4 +1,4 @@
-# go-shortlink
+# shortlink-service (go/shortcut)
 
 A tiny, self-hosted URL shortener for personal use. Point your browser at
 `http://go/<name>` and get redirected to whatever URL `<name>` resolves to.
