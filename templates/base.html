@@ -1,18 +1,25 @@
 <!doctype html>
-<html>
-  <head>
-    {% block head %}
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
-    <link type="image/png" sizes="96x96" rel="icon" href="{{ url_for('static', filename='image/url.png') }}">
-    <title>{% block title %}{% endblock %} - My URLDB List</title>
-    {% endblock %}
-  </head>
-  <body>
-    <div id="content">{% block content %}{% endblock %}</div>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}go/shortlink{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
+  <link type="image/png" sizes="96x96" rel="icon" href="{{ url_for('static', filename='image/url.png') }}">
+</head>
+<body>
+  <header class="site-header">
+    <a href="{{ url_for('home') }}" class="brand">
+      <span class="g">g</span><span class="o">o</span><span class="sep">/</span>shortlink
+    </a>
+    <nav class="site-nav">
+      <a href="{{ url_for('listdb') }}"{% if request.endpoint == 'listdb' %} class="active"{% endif %}>Browse</a>
+      <a href="{{ url_for('manage') }}"{% if request.endpoint == 'manage' %} class="active"{% endif %}>Manage</a>
+    </nav>
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+</body>
 </html>

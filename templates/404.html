@@ -1,23 +1,28 @@
 {% extends "base.html" %}
-{% block title %}404 Page{% endblock %}
+{% block title %}Not found · go/shortlink{% endblock %}
 {% block content %}
-  <section class="page_404">
-    <div class="container">
-      <div class="row">
-        <div class="col-sm-12 ">
-          <div class="col-sm-10 col-sm-offset-1  text-center">
-            <div class="four_zero_four_bg">
-              <h1 class="text-center ">404</h1>
-            </div>
-            <div class="contant_box_404">
-              <h3 class="h2">
-                Look like you're lost :(
-              </h3>
-              <p>record doesn't exist!</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+<div class="error-page">
+  <div class="error-code">404</div>
+  <h1 class="error-title">Page not found</h1>
+  {% if name %}
+  <p class="error-detail">No shortlink registered for <code>{{ name }}</code>.</p>
+  <div class="error-add-card">
+    <p class="error-add-label">Add it now?</p>
+    <form method="post" action="{{ url_for('manage_add') }}" class="error-add-form">
+      <input type="text" name="name" value="{{ name }}"
+             pattern="[A-Za-z0-9_.\-]{1,64}"
+             title="Letters, digits, dash, underscore, dot — max 64 chars"
+             autocomplete="off" required>
+      <input type="url" name="url" placeholder="https://example.com/" required>
+      <button type="submit" class="btn-add">Add</button>
+    </form>
+  </div>
+  {% else %}
+  <p class="error-detail">That shortlink doesn't exist.</p>
+  {% endif %}
+  <div class="error-actions">
+    <a href="{{ url_for('home') }}" class="btn btn-outline">Home</a>
+    <a href="{{ url_for('listdb') }}" class="btn btn-primary">Browse all shortlinks</a>
+  </div>
+</div>
 {% endblock %}

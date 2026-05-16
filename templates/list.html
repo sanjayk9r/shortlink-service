@@ -1,21 +1,35 @@
 {% extends "base.html" %}
-{% block title %}URL List{% endblock %}
+{% block title %}Browse · go/shortlink{% endblock %}
 {% block content %}
-<table id="data" class="table-fill">
-    <thead>
-      <tr>
-        <th class="text-left">Short Name</th>
-        <th class="text-left">Site URL</th>
-      </tr>
-    </thead>
-    <tbody class="table-hover">
-    {% for s, u in my_listdb.items() %}
-    <tr>
-        <td class="text-left">{{ s }}</td>
-        <td class="text-left">{{ u }}</td>
-    </tr>
-    {% endfor %}
-</tbody>
-</table>
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Shortlinks</h1>
+    <span class="page-count">{{ my_listdb | length }} entr{{ 'y' if my_listdb | length == 1 else 'ies' }}</span>
+  </div>
+
+  {% if my_listdb %}
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width:200px">Short name</th>
+          <th>Destination URL</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for name, url in my_listdb.items() %}
+        <tr>
+          <td class="col-name"><a href="/{{ name }}">{{ name }}</a></td>
+          <td class="col-url"><a href="{{ url }}" target="_blank" rel="noopener">{{ url }}</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    No shortlinks yet. <a href="{{ url_for('manage') }}">Add one →</a>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

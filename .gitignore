@@ -65,6 +65,12 @@ db.sqlite3-journal
 instance/
 .webassets-cache
 
+# go-shortlink local state
+shortlinks.db
+shortlinks.db-journal
+shortlinks.db-wal
+shortlinks.db-shm
+
 # Scrapy stuff:
 .scrapy
 
@@ -159,4 +165,4 @@ cython_debug/
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+.idea/

@@ -1,12 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# build
-docker container rm go-shortlink-svc && echo "container removed" || echo "removal failed"
+# Build the go-shortlink Docker image.
+set -euo pipefail
 
-docker image prune <<EOF
-y
-EOF
+IMAGE="${IMAGE:-go-shortlink-img}"
+TAG="${TAG:-latest}"
 
-docker build -t go-shortlink-img:latest .  \
-	&& echo "build successfull" \
-	|| echo "build failed"
+cd "$(dirname "$0")"
+
+echo "Building ${IMAGE}:${TAG}..."
+docker build -t "${IMAGE}:${TAG}" .
+echo "Build successful: ${IMAGE}:${TAG}"

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Manage · go/shortlink{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Manage shortlinks</h1>
+    <span class="page-count">{{ entries | length }} entr{{ 'y' if entries | length == 1 else 'ies' }}</span>
+  </div>
+
+  {% if messages %}
+  <div class="flash-list">
+    {% for category, msg in messages %}
+    <div class="flash {{ category }}">{{ msg }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="add-form-card">
+    <form method="post" action="{{ url_for('manage_add') }}">
+      <input type="text" name="name" placeholder="short-name"
+             pattern="[A-Za-z0-9_.\-]{1,64}"
+             title="Letters, digits, dash, underscore, dot — max 64 chars"
+             autocomplete="off" required>
+      <input type="url" name="url" placeholder="https://example.com/" required>
+      <button type="submit" class="btn-add">Add</button>
+    </form>
+  </div>
+
+  <div class="entries">
+    {% if entries %}
+      {% for name, url, created_at, updated_at in entries %}
+      <form id="ef{{ loop.index }}" method="post"
+            action="{{ url_for('manage_edit', name=name) }}"></form>
+      <form id="df{{ loop.index }}" method="post"
+            action="{{ url_for('manage_delete', name=name) }}"
+            onsubmit="return confirm('Delete {{ name }}?')"></form>
+
+      <div class="entry-row">
+        <div class="entry-left">
+          <input form="ef{{ loop.index }}" class="f-name" type="text"
+                 name="new_name" value="{{ name }}"
+                 pattern="[A-Za-z0-9_.\-]{1,64}" required>
+          <input form="ef{{ loop.index }}" class="f-url" type="url"
+                 name="url" value="{{ url }}" required>
+        </div>
+        <div class="entry-right">
+          <a class="try-link" href="/{{ name }}" target="_blank" title="Open shortlink">↗</a>
+          <button form="ef{{ loop.index }}" type="submit" class="btn-save">Save</button>
+          <button form="df{{ loop.index }}" type="submit" class="btn-del">Delete</button>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty-state">No shortlinks yet. Add one above.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
