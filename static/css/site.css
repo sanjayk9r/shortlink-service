@@ -276,6 +276,61 @@ input[name="name"],
   border-radius: var(--radius);
 }
 
+/* ── Browse search bar ── */
+.search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 12px;
+  margin-bottom: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.search-bar:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+}
+.search-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--text-2);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+.search-bar input {
+  flex: 1;
+  height: 40px;
+  border: none;
+  background: transparent;
+  padding: 0 10px;
+  font-size: 14px;
+  font-family: var(--font);
+  color: var(--text);
+  outline: none;
+  box-shadow: none;
+}
+.search-bar input:focus {
+  border-color: transparent;
+  box-shadow: none;
+}
+.search-clear {
+  height: 24px;
+  width: 24px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.search-clear:hover { background: var(--bg); color: var(--text); }
+
 /* ── Browse table ── */
 .table-card {
   background: var(--white);
