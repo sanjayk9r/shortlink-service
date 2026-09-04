@@ -3,12 +3,13 @@
 set -euo pipefail
 
 CONTAINER="${CONTAINER:-go-shortlink-svc}"
+CONTAINER_ENGINE="${CONTAINER_ENGINE:-docker}"
 
-if ! docker container inspect "${CONTAINER}" >/dev/null 2>&1; then
+if ! "${CONTAINER_ENGINE}" container inspect "${CONTAINER}" >/dev/null 2>&1; then
     echo "No container named ${CONTAINER}"
     exit 0
 fi
 
-docker stop "${CONTAINER}" >/dev/null
-docker rm "${CONTAINER}" >/dev/null
+"${CONTAINER_ENGINE}" stop "${CONTAINER}" >/dev/null
+"${CONTAINER_ENGINE}" rm "${CONTAINER}" >/dev/null
 echo "Stopped and removed ${CONTAINER}"

@@ -1,6 +1,9 @@
+import sqlite3
+from concurrent.futures import ThreadPoolExecutor
+
 import pytest
 
-from app import create_app
+from app import ShortlinkDB, create_app
 
 
 @pytest.fixture
@@ -75,6 +78,18 @@ def test_api_put_rejects_invalid_shortname(client):
     assert rsp.status_code == 400
 
 
+def test_shortname_boundaries(client):
+    assert client.put("/api/urls/" + "a" * 64, json={"url": "https://example.com"}).status_code == 201
+    assert client.put("/api/urls/" + "a" * 65, json={"url": "https://example.com"}).status_code == 400
+    assert client.put("/api/urls/favicon.ico", json={"url": "https://example.com"}).status_code == 400
+
+
+def test_api_method_errors_are_json(client):
+    rsp = client.post("/api/urls/gh")
+    assert rsp.status_code == 405
+    assert rsp.get_json()["error"] == "method not allowed"
+
+
 def test_api_delete(client):
     rsp = client.delete("/api/urls/gh")
     assert rsp.status_code == 204
@@ -145,3 +160,88 @@ def test_manage_delete(client):
     rsp = client.post("/manage/delete/gh")
     assert rsp.status_code == 302
     assert client.get("/gh").status_code == 404
+
+
+def test_api_metadata_and_escaping(client):
+    rsp = client.put(
+        "/api/urls/meta",
+        json={
+            "url": "https://example.com/",
+            "description": "<script>alert(1)</script>",
+            "tags": ["one", "two"],
+        },
+    )
+    assert rsp.status_code == 201
+    assert rsp.get_json()["tags"] == ["one", "two"]
+    page = client.get("/listdb")
+    assert b"&lt;script&gt;" in page.data
+    assert b"<script>alert(1)</script>" not in page.data
+
+
+def test_api_malformed_json_is_consistent(client):
+    rsp = client.put(
+        "/api/urls/bad-json",
+        data='{"url":',
+        content_type="application/json",
+    )
+    assert rsp.status_code == 400
+    assert rsp.get_json()["error"] == "malformed JSON body"
+
+
+def test_security_headers_are_set(client):
+    rsp = client.get("/healthz")
+    assert rsp.headers["X-Content-Type-Options"] == "nosniff"
+    assert rsp.headers["X-Frame-Options"] == "DENY"
+    assert "Content-Security-Policy" in rsp.headers
+
+
+def test_redirect_code_is_configurable(client):
+    client.application.config["REDIRECT_CODE"] = 307
+    assert client.get("/gh").status_code == 307
+
+
+def test_server_side_filter_and_pagination(client):
+    db = client.application.config["SHORTLINK_DB"]
+    for name in ("alpha", "beta", "gamma"):
+        db.upsert(name, f"https://example.com/{name}", description="needle" if name == "beta" else "")
+    rsp = client.get("/listdb?q=needle&per_page=1")
+    assert rsp.status_code == 200
+    assert b"beta" in rsp.data
+    assert b"alpha" not in rsp.data
+    assert b"Page" not in rsp.data
+
+
+def test_export_import_round_trip(db_file):
+    app = create_app(db_path=db_file)
+    app.config.update(TESTING=True)
+    with app.test_client() as c:
+        c.put("/api/urls/exported", json={"url": "https://example.com", "tags": ["x"]})
+        exported = c.get("/api/urls/export").get_json()
+    other = create_app(db_path=db_file.with_name("other.db"))
+    other.config.update(TESTING=True)
+    with other.test_client() as c:
+        rsp = c.post("/api/urls/import", json={"links": exported["links"]})
+        assert rsp.status_code == 200
+        assert c.get("/api/urls/exported").get_json()["tags"] == ["x"]
+
+
+def test_existing_schema_is_migrated(tmp_path):
+    path = tmp_path / "old.db"
+    with sqlite3.connect(path) as conn:
+        conn.execute("CREATE TABLE shortlinks (name TEXT PRIMARY KEY, url TEXT NOT NULL, "
+                     "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                     "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+        conn.execute("INSERT INTO shortlinks(name,url) VALUES ('old','https://example.com')")
+    db = ShortlinkDB(path)
+    record = db.get_record("old")
+    assert record["description"] == ""
+    assert record["tags"] == []
+
+
+def test_concurrent_upserts_are_safe(db_file):
+    db = ShortlinkDB(db_file)
+    def write(index):
+        return db.upsert(f"n{index}", f"https://example.com/{index}")
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        list(pool.map(write, range(30)))
+    assert db.count() == 30

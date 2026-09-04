@@ -4,87 +4,55 @@
 <div class="page">
   <div class="page-header">
     <h1 class="page-title">Shortlinks</h1>
-    <span class="page-count" id="entry-count">{{ my_listdb | length }} entr{{ 'y' if my_listdb | length == 1 else 'ies' }}</span>
+    <span class="page-count">{{ total }} entr{{ 'y' if total == 1 else 'ies' }}</span>
   </div>
 
-  {% if my_listdb %}
+  {% if total %}
   <div class="search-bar">
-    <svg class="search-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"/>
-      <path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>
-    <input
-      id="search-input"
-      type="text"
-      placeholder="Filter by name or URL…"
-      autocomplete="off"
-      spellcheck="false"
-    >
-    <button id="search-clear" class="search-clear" aria-label="Clear search" hidden>✕</button>
+    <form method="get" action="{{ url_for('listdb') }}">
+      <input id="search-input" name="q" type="search" value="{{ query }}"
+             placeholder="Filter by name, URL, description, or tag…" autocomplete="off">
+      <input type="hidden" name="per_page" value="{{ per_page }}">
+      <button type="submit" class="btn-outline">Filter</button>
+      {% if query %}<a class="btn-outline" href="{{ url_for('listdb') }}">Clear</a>{% endif %}
+    </form>
   </div>
 
   <div class="table-card">
     <table class="data-table" id="links-table">
       <thead>
         <tr>
-          <th style="width:200px">Short name</th>
+          <th style="width:180px">Short name</th>
           <th>Destination URL</th>
+          <th>Description</th>
+          <th>Tags</th>
+          <th>Created</th>
+          <th>Updated</th>
         </tr>
       </thead>
       <tbody>
-        {% for name, url in my_listdb.items() %}
+        {% for entry in entries %}
         <tr>
-          <td class="col-name"><a href="/{{ name }}">{{ name }}</a></td>
-          <td class="col-url"><a href="{{ url }}" target="_blank" rel="noopener">{{ url }}</a></td>
+          <td class="col-name"><a href="{{ url_for('go', name=entry.name) }}">{{ entry.name }}</a></td>
+          <td class="col-url"><a href="{{ entry.url }}" target="_blank" rel="noopener">{{ entry.url }}</a></td>
+          <td>{{ entry.description }}</td>
+          <td>{{ entry.tags | join(', ') }}</td>
+          <td class="col-date">{{ entry.created_at }}</td>
+          <td class="col-date">{{ entry.updated_at }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
-    <div id="no-results" class="empty-state" hidden>No shortlinks match your search.</div>
   </div>
+  {% if pages > 1 %}
+  <nav class="pagination" aria-label="Pagination">
+    {% if page > 1 %}<a class="btn-outline" href="{{ url_for('listdb', q=query, page=page-1, per_page=per_page) }}">Previous</a>{% endif %}
+    <span>Page {{ page }} of {{ pages }}</span>
+    {% if page < pages %}<a class="btn-outline" href="{{ url_for('listdb', q=query, page=page+1, per_page=per_page) }}">Next</a>{% endif %}
+  </nav>
+  {% endif %}
   {% else %}
-  <div class="empty-state">
-    No shortlinks yet. <a href="{{ url_for('manage') }}">Add one →</a>
-  </div>
+  <div class="empty-state">{% if query %}No shortlinks match your search.{% else %}No shortlinks yet. <a href="{{ url_for('manage') }}">Add one →</a>{% endif %}</div>
   {% endif %}
 </div>
-
-{% if my_listdb %}
-<script>
-(function () {
-  const input = document.getElementById('search-input');
-  const clearBtn = document.getElementById('search-clear');
-  const rows = document.querySelectorAll('#links-table tbody tr');
-  const noResults = document.getElementById('no-results');
-  const countEl = document.getElementById('entry-count');
-  const total = rows.length;
-
-  function pluralise(n) {
-    return n + ' entr' + (n === 1 ? 'y' : 'ies');
-  }
-
-  function filter() {
-    const q = input.value.trim().toLowerCase();
-    clearBtn.hidden = q === '';
-    let visible = 0;
-    rows.forEach(function (row) {
-      const name = row.cells[0].textContent.toLowerCase();
-      const url  = row.cells[1].textContent.toLowerCase();
-      const show = q === '' || name.includes(q) || url.includes(q);
-      row.hidden = !show;
-      if (show) visible++;
-    });
-    noResults.hidden = visible > 0;
-    countEl.textContent = q === '' ? pluralise(total) : visible + ' of ' + pluralise(total);
-  }
-
-  input.addEventListener('input', filter);
-  clearBtn.addEventListener('click', function () {
-    input.value = '';
-    input.focus();
-    filter();
-  });
-})();
-</script>
-{% endif %}
 {% endblock %}

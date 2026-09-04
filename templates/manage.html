@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page">
   <div class="page-header">
-    <h1 class="page-title">Manage shortlinks</h1>
+    <h1 class="page-title">Manage Shortlinks</h1>
     <span class="page-count">{{ entries | length }} entr{{ 'y' if entries | length == 1 else 'ies' }}</span>
   </div>
 
@@ -22,29 +22,40 @@
              title="Letters, digits, dash, underscore, dot — max 64 chars"
              autocomplete="off" required>
       <input type="url" name="url" placeholder="https://example.com/" required>
+      <input type="text" name="description" maxlength="500" placeholder="Description">
+      <input type="text" name="tags" maxlength="500" placeholder="tags, comma-separated">
       <button type="submit" class="btn-add">Add</button>
     </form>
   </div>
 
   <div class="entries">
     {% if entries %}
-      {% for name, url, created_at, updated_at in entries %}
+      {% for entry in entries %}
       <form id="ef{{ loop.index }}" method="post"
-            action="{{ url_for('manage_edit', name=name) }}"></form>
+            action="{{ url_for('manage_edit', name=entry.name) }}"></form>
       <form id="df{{ loop.index }}" method="post"
-            action="{{ url_for('manage_delete', name=name) }}"
-            onsubmit="return confirm('Delete {{ name }}?')"></form>
+            action="{{ url_for('manage_delete', name=entry.name) }}"
+            onsubmit="return confirm('Delete this shortlink?')"></form>
 
       <div class="entry-row">
         <div class="entry-left">
           <input form="ef{{ loop.index }}" class="f-name" type="text"
-                 name="new_name" value="{{ name }}"
+                 name="new_name" value="{{ entry.name }}"
                  pattern="[A-Za-z0-9_.\-]{1,64}" required>
           <input form="ef{{ loop.index }}" class="f-url" type="url"
-                 name="url" value="{{ url }}" required>
+                 name="url" value="{{ entry.url }}" required>
+          <input form="ef{{ loop.index }}" class="f-description" type="text"
+                 name="description" value="{{ entry.description }}" maxlength="500"
+                 placeholder="Description">
+          <input form="ef{{ loop.index }}" class="f-tags" type="text"
+                 name="tags" value="{{ entry.tags | join(', ') }}" maxlength="500"
+                 placeholder="tags, comma-separated">
         </div>
         <div class="entry-right">
-          <a class="try-link" href="/{{ name }}" target="_blank" title="Open shortlink">↗</a>
+          <span class="entry-date" title="Created {{ entry.created_at }}; updated {{ entry.updated_at }}">
+            {{ entry.updated_at }}
+          </span>
+          <a class="try-link" href="{{ url_for('go', name=entry.name) }}" target="_blank" title="Open shortlink">↗</a>
           <button form="ef{{ loop.index }}" type="submit" class="btn-save">Save</button>
           <button form="df{{ loop.index }}" type="submit" class="btn-del">Delete</button>
         </div>
